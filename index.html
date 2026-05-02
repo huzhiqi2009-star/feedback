@@ -55,15 +55,16 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // --- 已根据你提供的信息填好 Firebase 配置 ---
-                const firebaseConfig = {
-            apiKey: "AIzaSyAa_9ilDyMxWFok5bTrKAF3JBp...", // 这里的Key以你截图中的为准
-            authDomain: "emmapolite-d3edf.firebaseapp.com",
-            projectId: "emmapolite-d3edf",
-            storageBucket: "emmapolite-d3edf.appspot.com",
-            messagingSenderId: "1039916098507",
-            appId: "1:1039916098507:web:04800ef5c035...", // 以你截图中的为准
-            measurementId: "G-D637PKNRTT"
-        };
+              // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAa_9ilDyMxWFok5bTrKAF3JBph4kwuibc",
+  authDomain: "emmapolite-d3edf.firebaseapp.com",
+  projectId: "emmapolite-d3edf",
+  storageBucket: "emmapolite-d3edf.firebasestorage.app",
+  messagingSenderId: "1039916098507",
+  appId: "1:1039916098507:web:04800ef5c0352b1a974c4e",
+  measurementId: "G-D637PKNRTT"
+     };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);

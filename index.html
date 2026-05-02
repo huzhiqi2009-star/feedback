@@ -1,10 +1,9 @@
--日常痛点
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>匿名意见箱 | 写出你日常的痛点 </title>
+    <title>匿名意见箱 | 写出你日常的痛点</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -16,7 +15,6 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             background: #eef2f3;
-            /* 动态弥散背景 */
             background-image: 
                 radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
@@ -47,7 +45,6 @@
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
         }
 
-        /* 隐藏滚动条但保留功能 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -57,14 +54,14 @@
         import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // --- 重点：在此替换你的 Firebase 配置 ---
+        // --- 已根据你提供的信息填好 Firebase 配置 ---
         const firebaseConfig = {
-            apiKey: "在此处填入API_KEY",
-            authDomain: "在此处填入PROJECT_ID.firebaseapp.com",
-            projectId: "在此处填入PROJECT_ID",
-            storageBucket: "在此处填入PROJECT_ID.appspot.com",
-            messagingSenderId: "在此处填入SENDER_ID",
-            appId: "在此处填入APP_ID"
+            apiKey: "BGk79Ybvwhdi-1lhZHeWywi2jpByMoMrKu8CPdLLYi6rlln7Ryd_4IpV0vfVX7ps8kid0l10JpPt7wreltlxQVY",
+            authDomain: "emmapolite-d3edf.firebaseapp.com",
+            projectId: "emmapolite-d3edf",
+            storageBucket: "emmapolite-d3edf.appspot.com",
+            messagingSenderId: "1039916098507",
+            appId: "1:1039916098507:web:7856d338f0d5e6833c8c1e" 
         };
 
         const app = initializeApp(firebaseConfig);
@@ -89,7 +86,7 @@
             const [pw, setPw] = useState('');
 
             useEffect(() => {
-                signInAnonymously(auth).catch(() => setStatus('请检查 Firebase 配置'));
+                signInAnonymously(auth).catch(() => setStatus('连接云端失败，请检查密钥'));
                 onAuthStateChanged(auth, setUser);
             }, []);
 
@@ -102,13 +99,16 @@
 
             const send = async () => {
                 if (!msg.trim() || msg.length > 1000) return;
-                setStatus('SENDING...');
+                setStatus('发送中...');
                 try {
                     await addDoc(collection(db, "messages"), { content: msg, timestamp: serverTimestamp() });
                     setMsg(''); 
-                    setStatus('SENT SUCCESSFULLY');
+                    setStatus('已成功匿名提交');
                     setTimeout(() => setStatus(''), 3000);
-                } catch (e) { setStatus('ERROR: CHECK FIREBASE RULES'); }
+                } catch (e) { 
+                    console.error(e);
+                    setStatus('发送失败，请确认数据库 Rules 已开启'); 
+                }
             };
 
             return (
@@ -119,7 +119,7 @@
                             <div className="space-y-8 animate-in fade-in duration-700">
                                 <header className="text-center space-y-2">
                                     <h1 className="text-4xl font-light tracking-tight">匿名意见箱</h1>
-                                    <p className="text-white/40 text-sm font-light tracking-widest uppercase">Pure & Anonymous Feedback</p>
+                                    <p className="text-white/40 text-sm font-light tracking-widest uppercase">写出你日常的痛点</p>
                                 </header>
 
                                 <div className="space-y-4">
@@ -136,10 +136,10 @@
                                             onClick={send} 
                                             className="px-8 py-3 bg-white text-black rounded-full font-semibold hover:bg-opacity-90 active:scale-95 transition-all shadow-xl shadow-white/5"
                                         >
-                                            发送反馈
+                                            提交意见
                                         </button>
                                     </div>
-                                    {status && <p className="text-center text-xs tracking-widest text-white/60 animate-pulse">{status}</p>}
+                                    {status && <p className="text-center text-xs tracking-widest text-white/60 animate-pulse uppercase">{status}</p>}
                                 </div>
                             </div>
                         ) : (
@@ -164,7 +164,7 @@
                                 <div className="flex items-center gap-2">
                                     <input 
                                         type="password" 
-                                        placeholder="ACCESS CODE" 
+                                        placeholder="管理密码" 
                                         className="bg-transparent border-b border-white/20 text-[10px] tracking-widest text-center w-24 outline-none focus:border-white/60" 
                                         value={pw} 
                                         onChange={e=>setPw(e.target.value)}
@@ -181,6 +181,3 @@
     </script>
 </body>
 </html>
-
-```
-

@@ -4,17 +4,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>匿名意见箱</title>
+    <title>匿名意见箱 | 极简与纯粹</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background: #eef2f3;
+            /* 动态弥散背景 */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // --- 重点：请把你在 Firebase 获得的配置粘贴在这里 ---
+        // --- 重点：在此替换你的 Firebase 配置 ---
         const firebaseConfig = {
             apiKey: "在此处填入API_KEY",
             authDomain: "在此处填入PROJECT_ID.firebaseapp.com",
@@ -30,8 +73,9 @@
         window.fb = { auth, db, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, signInAnonymously, onAuthStateChanged };
     </script>
 </head>
-<body class="bg-gray-50">
+<body class="text-white">
     <div id="root"></div>
+
     <script type="text/babel">
         const { useState, useEffect } = React;
         const { auth, db, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, signInAnonymously, onAuthStateChanged } = window.fb;
@@ -45,7 +89,7 @@
             const [pw, setPw] = useState('');
 
             useEffect(() => {
-                signInAnonymously(auth).catch(e => setStatus('配置错误，请检查 Firebase 参数'));
+                signInAnonymously(auth).catch(() => setStatus('请检查 Firebase 配置'));
                 onAuthStateChanged(auth, setUser);
             }, []);
 
@@ -57,42 +101,78 @@
             }, [admin, user]);
 
             const send = async () => {
-                if (!msg.trim()) return;
-                setStatus('发送中...');
+                if (!msg.trim() || msg.length > 1000) return;
+                setStatus('SENDING...');
                 try {
                     await addDoc(collection(db, "messages"), { content: msg, timestamp: serverTimestamp() });
-                    setMsg(''); setStatus('✅ 已成功匿名提交！');
+                    setMsg(''); 
+                    setStatus('SENT SUCCESSFULLY');
                     setTimeout(() => setStatus(''), 3000);
-                } catch (e) { setStatus('❌ 提交失败，数据库规则未开启？'); }
+                } catch (e) { setStatus('ERROR: CHECK FIREBASE RULES'); }
             };
 
             return (
-                <div className="max-w-md mx-auto p-6 pt-12">
-                    <h1 className="text-2xl font-bold text-center mb-2">匿名意见箱</h1>
-                    <p className="text-gray-400 text-center text-sm mb-8">在这里留下你的想法，我看得到。</p>
-                    
-                    {!admin ? (
-                        <div className="space-y-4">
-                            <textarea className="w-full h-40 p-4 border rounded-2xl focus:ring-2 focus:ring-black outline-none shadow-sm" 
-                                placeholder="输入内容 (1000字以内)" value={msg} onChange={e=>setMsg(e.target.value)} maxLength={1000}/>
-                            <button onClick={send} className="w-full bg-black text-white py-3 rounded-xl font-bold">匿名发送</button>
-                            {status && <p className="text-center text-sm font-medium text-blue-600">{status}</p>}
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <button onClick={()=>setAdmin(false)} className="text-xs text-gray-400">返回</button>
-                            {list.map(i => (
-                                <div key={i.id} className="bg-white p-4 rounded-xl border shadow-sm">
-                                    <p className="text-gray-800">{i.content}</p>
-                                    <p className="text-[10px] text-gray-300 mt-2">{i.timestamp?.toDate().toLocaleString()}</p>
+                <div className="min-h-screen flex items-center justify-center p-6">
+                    <div className="w-full max-w-xl glass-card rounded-[2.5rem] overflow-hidden p-8 md:p-12 transition-all duration-500">
+                        
+                        {!admin ? (
+                            <div className="space-y-8 animate-in fade-in duration-700">
+                                <header className="text-center space-y-2">
+                                    <h1 className="text-4xl font-light tracking-tight">匿名意见箱</h1>
+                                    <p className="text-white/40 text-sm font-light tracking-widest uppercase">Pure & Anonymous Feedback</p>
+                                </header>
+
+                                <div className="space-y-4">
+                                    <textarea 
+                                        className="w-full h-56 p-6 glass-input rounded-3xl resize-none text-lg font-light leading-relaxed no-scrollbar" 
+                                        placeholder="在这里倾诉你的想法..." 
+                                        value={msg} 
+                                        onChange={e=>setMsg(e.target.value)} 
+                                        maxLength={1000}
+                                    />
+                                    <div className="flex justify-between items-center px-2">
+                                        <span className="text-[10px] text-white/30 tracking-widest">{msg.length} / 1000</span>
+                                        <button 
+                                            onClick={send} 
+                                            className="px-8 py-3 bg-white text-black rounded-full font-semibold hover:bg-opacity-90 active:scale-95 transition-all shadow-xl shadow-white/5"
+                                        >
+                                            发送反馈
+                                        </button>
+                                    </div>
+                                    {status && <p className="text-center text-xs tracking-widest text-white/60 animate-pulse">{status}</p>}
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                    
-                    <div className="mt-20 opacity-10 flex justify-center gap-2">
-                        <input type="password" placeholder="密码" className="border text-xs w-20 px-1" value={pw} onChange={e=>setPw(e.target.value)}/>
-                        <button onClick={() => pw === "admin123" && setAdmin(true)} className="text-xs">查看</button>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                                <div className="flex justify-between items-end border-b border-white/10 pb-4">
+                                    <h2 className="text-2xl font-light">收到的反馈</h2>
+                                    <button onClick={()=>setAdmin(false)} className="text-[10px] uppercase tracking-widest text-white/40 hover:text-white transition-colors">退出管理</button>
+                                </div>
+                                <div className="h-[50vh] overflow-y-auto pr-2 space-y-4 no-scrollbar">
+                                    {list.length === 0 ? <p className="text-center py-20 text-white/20">暂无内容</p> : list.map(i => (
+                                        <div key={i.id} className="bg-white/5 p-6 rounded-3xl border border-white/5 hover:bg-white/10 transition-colors">
+                                            <p className="text-white/80 leading-relaxed font-light">{i.content}</p>
+                                            <p className="text-[9px] text-white/20 mt-4 uppercase tracking-widest">{i.timestamp?.toDate().toLocaleString()}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        <footer className="mt-12 flex justify-center items-center gap-4 opacity-20 hover:opacity-100 transition-opacity duration-500">
+                            {!admin && (
+                                <div className="flex items-center gap-2">
+                                    <input 
+                                        type="password" 
+                                        placeholder="ACCESS CODE" 
+                                        className="bg-transparent border-b border-white/20 text-[10px] tracking-widest text-center w-24 outline-none focus:border-white/60" 
+                                        value={pw} 
+                                        onChange={e=>setPw(e.target.value)}
+                                    />
+                                    <button onClick={() => pw === "admin123" && setAdmin(true)} className="text-[10px] tracking-widest uppercase hover:text-white transition-colors">Login</button>
+                                </div>
+                            )}
+                        </footer>
                     </div>
                 </div>
             );
@@ -103,3 +183,4 @@
 </html>
 
 ```
+
